@@ -72,7 +72,7 @@ for i in range(len(lines)):
         if t[0].count(" ") > 0:
             error(counter, "Invalid label name")
         if t[1] != "":
-            labels[t][0] = format(counter, 7)
+            labels[t[0]] = format(counter, 7)
             lines[i] = t[1]
         else:
             labels[t][0] = format(counter+1, 7)
@@ -157,6 +157,8 @@ for k in range(len(lines)):
             error(counter, "wrong number of arguments")
         output += format(commands.index(line[0]), 5) + "0"
         output += to_register(line[1])
+        if "$" not in line[2]:
+            error(counter, "General Syntax Error")
         output += format(int(line[2][1:]), 7)
 
     elif line[0] in ("jmp", "jlt", "jgt", "je"):
@@ -173,12 +175,11 @@ for k in range(len(lines)):
             output += "11111"
 
         output += "0000"
-        output += to_register(line[1])
-        if line[2] in vars:
-            error(counter, f"{line[2]} is a variable not a label")
-        if line[2] not in labels:
+        if line[1] in vars:
+            error(counter, f"{line[1]} is a variable not a label")
+        if line[1] not in labels:
             error(counter, "undefined label")
-        output += labels[line[2]]
+        output += labels[line[1]]
 
     else:
         error(counter, "not a valid instruction")
