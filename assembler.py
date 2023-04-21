@@ -188,4 +188,5 @@ for k in range(len(lines)):
 if not hlt:
     error(counter, "No hlt in code.")
 
-print(output)
+with open("output.txt", "w") as file:
+    file.write(output)
