@@ -78,6 +78,8 @@ for i in range(len(lines)):
             labels[t][0] = format(counter+1, 7)
             to_remove.append(i)
             continue
+    if line.split()[0] == "var":
+        continue
     counter += 1
 
 counter = 0
