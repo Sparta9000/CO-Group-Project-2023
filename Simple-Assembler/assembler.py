@@ -1,3 +1,5 @@
+import sys
+
 output = ""
 
 vars = []
@@ -57,8 +59,7 @@ def error(counter, message):
 
 hlt = False
 
-with open("input.txt") as file:
-    lines = file.readlines()
+lines = list(sys.stdin)
 
 to_remove = []
 counter = 0
@@ -191,5 +192,4 @@ for k in range(len(lines)):
 if not hlt:
     error(counter, "No hlt in code.")
 
-with open("output.txt", "w") as file:
-    file.write(output)
+print(output)
