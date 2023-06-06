@@ -1,2 +1,3 @@
-movf R1 $32.0
+mov R1 $100
+asr R2 $2
 hlt
