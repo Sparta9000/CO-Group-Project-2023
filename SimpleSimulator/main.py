@@ -1,3 +1,5 @@
+import sys
+
 def bin_num(num, digits=16):
     x = str(bin(num))[2:]
     while len(x) != digits:
@@ -5,7 +7,7 @@ def bin_num(num, digits=16):
     return x
 
 def dump():
-    s = bin_num(pc, 7) + " "
+    s = bin_num(pc, 7) + "        "
     for i in register:
         s += bin_num(register[i]) + " "
     s = s[:-1]
@@ -26,14 +28,28 @@ def mem_dump():
     for i in range(start, 128):
         print("0"*16)
 
+def convert_float(num):
+    exp = to_num(num[:3]) - 3
+    b = num[3:]
+    a = "1"
+
+    t = len(a) + exp - 1
+    k = 0.0
+    for i in a+b:
+        k += (2**t)*int(i)
+        t -= 1
+    return k
+
 def to_num(b):
     return int(b, 2)
 
 def init_memory(mem):
     memory[mem] = 0
 
-with open("input.txt") as f:
-    lines = f.readlines()
+# with open("input.txt") as f:
+#     lines = f.readlines()
+
+lines = list(sys.stdin)
 
 pc = 0
 register = {"000": 0,
@@ -56,7 +72,7 @@ while not halted:
     if instruction == "11010":
         halted = True
 
-    elif instruction in ["00000", "00001", "00110", "01010", "01011", "01100"]:
+    elif instruction in ["00000", "00001", "00110", "01010", "01011", "01100", "10100"]:
         r1 = line[7:10]
         r2 = line[10:13]
         r3 = line[13:16]
@@ -74,6 +90,8 @@ while not halted:
             x = register[r2] | register[r3]
         elif instruction == "01100":
             x = register[r2] & register[r3]
+        elif instruction == "10100":
+            x = register[r2] ** register[r3]
 
         if x > MAX_INT or x < 0:
             register["111"] = bin_num(8)
@@ -81,7 +99,7 @@ while not halted:
 
         register[r1] = x
     
-    elif instruction in ["00010", "01000", "01001"]:
+    elif instruction in ["00010", "01000", "01001", "10110", "10111"]:
         r = line[6:9]
         val = to_num(line[9:16])
         
@@ -89,15 +107,22 @@ while not halted:
             val = register[r] >> val
         elif instruction == "01001":
             val = register[r] << val
+        elif instruction == "10110":
+            val = (register[r] << 1) + val
+        elif instruction == "10111":
+            val = (register[r] >> 1) + (val*(2**len(bin(register[r])-3)))
 
         register[r] = val
         
-    elif instruction in ["00011", "00111", "01101", "01110"]:
+    elif instruction in ["00011", "00111", "01101", "01110", "10011"]:
         r1 = line[10:13]
         r2 = line[13:16]
 
         if instruction == "00011":
             register[r1] = register[r2]
+            register["111"] = 0
+        elif instruction == "10011":
+            register[r1] %= register[r2]
             register["111"] = 0
         elif instruction == "000111":
             if register[r2] == 0:
@@ -147,6 +172,9 @@ while not halted:
             if register['111'] == 1:
                 new_pc = mem
         
+        register["111"] = 0
+
+    elif instruction == "10101":
         register["111"] = 0
         
 

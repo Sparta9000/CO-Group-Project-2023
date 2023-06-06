@@ -6,7 +6,7 @@ vars = []
 vars_done = False
 labels = {}
 
-commands = ["add", "sub", "movimm", "mov", "ld", "st", "mul", "div", "rs", "ls", "xor", "or", "and", "not", "cmp", "jmp", "jlt", "jgt", "je", "hlt"]
+commands = ["add", "sub", "movimm", "mov", "ld", "st", "mul", "div", "rs", "ls", "xor", "or", "and", "not", "cmp", "jmp", "addf", "subf", "movf", "mod", "pow", "nop", "asl", "asr", "jlt", "jgt", "je", "hlt"]
 
 def check_3_reg(line):
     return len(line) == 4
@@ -52,6 +52,43 @@ def format(num, n):
         x = "0" + x
     
     return x
+
+def convert_float_8bit(num):
+    try:
+        if float(num) >= 32:
+            error(counter, "out of range float")
+    except:
+        error(counter, "floating point number expected")
+
+    whole, dec = str(num).split(".")
+    whole = bin(int(whole))[2:]
+    t = ""
+    dec = float(f"0.{dec}")
+
+    for _ in range(9):
+        t += str(int(dec*2))
+        dec *= 2
+        dec = dec - int(dec)
+
+    c = 0
+    if whole == "0":
+        if float(num) != 0:
+            while t[0] != "1" and c >= -3:
+                c -= 1
+                t = t[1:]
+            c -= 1
+            t = t[1:]
+    elif float(num) != 0:
+        while whole != "1":
+            t = whole[-1] + t
+            whole = whole[:-1]
+            c += 1
+    
+    if (c < -3) or (c > 7):
+        error(counter, "out of range")
+
+    exp = format(3+c, 3)
+    return str(exp) + t[:5]
 
 def error(counter, message):
     print(f"error at line {counter}: {message}")
@@ -115,7 +152,7 @@ for k in range(len(lines)):
     if hlt:
         error(counter, "commands after hlt")
     
-    elif line[0] in ("add", "sub", "mul", "xor", "or", "and"):
+    elif line[0] in ("add", "sub", "mul", "xor", "or", "and", "addf", "subf", "pow"):
         if not check_3_reg(line):
             error(counter, "wrong number of arguments")
         output += format(commands.index(line[0]), 5) + "00"
@@ -141,7 +178,7 @@ for k in range(len(lines)):
             else:
                 output += to_register(line[2])
 
-    elif line[0] in ("div", "not", "cmp"):
+    elif line[0] in ("div", "not", "cmp", "mod"):
         if not check_2_reg(line):
             error(counter, "wrong number of arguments")
         output += format(commands.index(line[0]), 5) + "00000"
@@ -164,6 +201,15 @@ for k in range(len(lines)):
             error(counter, "General Syntax Error")
         output += format(int(line[2][1:]), 7)
 
+    elif line[0] == "movf":
+        if len(line) != 3:
+            error(counter, "invalid number of arguments")
+        output += format(commands.index(line[0]), 5)
+        output += to_register(line[1])
+        if not "$"in line[2]:
+            error(counter, "invalid format")
+        output += convert_float_8bit(line[2][1:])
+
     elif line[0] in ("jmp", "jlt", "jgt", "je"):
         if not check_1_reg(line):
             error(counter, "wrong number of arguments")
@@ -183,6 +229,22 @@ for k in range(len(lines)):
         if line[1] not in labels:
             error(counter, "undefined label")
         output += labels[line[1]]
+
+    elif line[0] == "nop":
+        if (len(line) != 1):
+            error(counter, "invalid number of arguments")
+        output += format(commands.index(line[0]), 5) + "00000000000"
+
+    elif line[0] in ("asl", "asr"):
+        if not check_2_reg(line):
+            error(counter, "Wrong number of arguments")
+        output += format(commands.index(line[0]), 5) + "0"
+        output += to_register(line[1])
+        if line[2][0] != "$":
+            error(counter, "expected a decimal value")
+        if int(line[2][1:]) not in (0, 1):
+            error(counter, "immediate value out of range")
+        output += format(int(line[2][1:]), 7)
 
     else:
         error(counter, "not a valid instruction")
