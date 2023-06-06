@@ -1,0 +1,4 @@
+mov R1 $5
+asl R1 $1
+asr R1 $0
+hlt

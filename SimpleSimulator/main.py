@@ -1,7 +1,10 @@
 import sys
 
 def bin_num(num, digits=16):
-    x = str(bin(num))[2:]
+    if (type(num) == float):
+        x = convert_float_8bit(num)
+    else:
+        x = str(bin(num))[2:]
     while len(x) != digits:
         x = '0' + x
     return x
@@ -46,8 +49,41 @@ def to_num(b):
 def init_memory(mem):
     memory[mem] = 0
 
-# with open("input.txt") as f:
-#     lines = f.readlines()
+def format(num, n):
+    x = bin(int(num))[2:]
+    
+    while len(x) != n:
+        x = "0" + x
+    
+    return x
+
+def convert_float_8bit(num):
+    whole, dec = str(num).split(".")
+    whole = bin(int(whole))[2:]
+    t = ""
+    dec = float(f"0.{dec}")
+
+    for _ in range(9):
+        t += str(int(dec*2))
+        dec *= 2
+        dec = dec - int(dec)
+
+    c = 0
+    if whole == "0":
+        if float(num) != 0:
+            while t[0] != "1" and c >= -3:
+                c -= 1
+                t = t[1:]
+            c -= 1
+            t = t[1:]
+    elif float(num) != 0:
+        while whole != "1":
+            t = whole[-1] + t
+            whole = whole[:-1]
+            c += 1
+
+    exp = format(3+c, 3)
+    return str(exp) + t[:5]
 
 lines = list(sys.stdin)
 
@@ -94,7 +130,7 @@ while not halted:
             x = register[r2] ** register[r3]
 
         if x > MAX_INT or x < 0:
-            register["111"] = bin_num(8)
+            register["111"] = 8
             x = 0
 
         register[r1] = x
@@ -110,7 +146,7 @@ while not halted:
         elif instruction == "10110":
             val = (register[r] << 1) + val
         elif instruction == "10111":
-            val = (register[r] >> 1) + (val*(2**len(bin(register[r])-3)))
+            val = (register[r] >> 1) + (2**15)
 
         register[r] = val
         
@@ -176,7 +212,29 @@ while not halted:
 
     elif instruction == "10101":
         register["111"] = 0
-        
+
+    elif instruction == "10010":
+        register["111"] = 0
+        r = line[5:8]
+        val = convert_float(line[8:16])
+        register[r] = val
+
+    elif instruction in ["10000", "10001"]:
+        r1 = line[7:10]
+        r2 = line[10:13]
+        r3 = line[13:16]
+        register["111"] = 0
+
+        if instruction == "10000":
+            t = register[r2] + register[r3]
+        if instruction == "10001":
+            t = register[r2] - register[r3]
+
+        if not (0.125 <= t <= 31.5):
+            register["111"] = 8
+            t = 0
+
+        register[r1] = t
 
     dump()
     pc = new_pc

@@ -55,10 +55,13 @@ def format(num, n):
 
 def convert_float_8bit(num):
     try:
-        if float(num) >= 32:
+        if not (0.125 <= float(num) <= 32):
             error(counter, "out of range float")
     except:
         error(counter, "floating point number expected")
+
+    if "." not in num:
+        error(counter, "not a floating point")
 
     whole, dec = str(num).split(".")
     whole = bin(int(whole))[2:]

@@ -1,0 +1,8 @@
+mov R1 $5
+mov R2 $6
+mod R1 R2
+pow R3 R1 R2
+mov R4 $10
+pow R5 R1 R4
+nop
+hlt
